@@ -39,3 +39,20 @@
 
 # debug information files
 *.dwo
+
+# Apple specific
+*.dSYM/
+*.su
+*.DSSTORE
+
+# Build environment
+build/
+env/
+venv/
+ENV/
+.idea/
+.vscode/
+*.code-workspace
+*.swp
+*.swo
+*.bak
