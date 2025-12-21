@@ -25,6 +25,8 @@ ctest --test-dir build
 - `-DDTT_BUILD_TESTS=ON` (default): build GoogleTest suite.
 - `-DDTT_ENABLE_CUDA=ON`: enable CUDA language for GPU (no kernels yet).
 - `-DDTT_ENABLE_CLANG_TIDY=ON`: run clang-tidy if found.
+- `-DDTT_BUILD_BENCHMARKS=ON` (default): build Google Benchmark harnesses.
+- `-DDTT_BUILD_EXAMPLES=ON` (default): build example executables.
 
 ### Formatting
 
@@ -33,6 +35,23 @@ If `clang-format` is available:
 ```bash
 cmake --build build --target format
 ```
+
+### Benchmarks
+
+```bash
+cmake -S . -B build -DDTT_BUILD_BENCHMARKS=ON
+cmake --build build --target dtt_bench
+./build/dtt_bench
+```
+
+### Simulation example + ParaView
+
+```bash
+cmake -S . -B build -DDTT_BUILD_EXAMPLES=ON
+cmake --build build --target dtt_sim
+./build/dtt_sim 512 20 0.01 output
+```
+Open `output/frames.pvd` in ParaView and press Play.
 
 ## Project layout
 
