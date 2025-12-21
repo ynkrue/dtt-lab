@@ -26,6 +26,8 @@ find_package(BLAS REQUIRED)
 
 add_library(dtt STATIC
   src/dtt.cpp
+  src/sim/particles.cpp
+  src/sim/forces.cpp
 )
 
 target_include_directories(dtt
@@ -84,6 +86,8 @@ if(DTT_BUILD_TESTS)
 
   add_executable(dtt_tests
     tests/dummy_test.cpp
+    tests/particles_test.cpp
+    tests/forces_test.cpp
   )
   target_link_libraries(dtt_tests PRIVATE dtt GTest::gtest_main)
 
