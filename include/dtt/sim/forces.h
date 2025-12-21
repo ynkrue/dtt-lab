@@ -19,7 +19,15 @@ struct ForceParams {
 // naive O(N^2) all-pairs force computation
 ForceField compute_forces_naive(const Particles &particles, ForceParams params);
 
-// simple euler step: x += vx * dt, vx += ax*dt, etc.
-void euler_step(Particles &particles, const ForceField &forces, double dt);
+// Optional reflecting boundary for integration.
+struct Boundary {
+    double xmin, xmax;
+    double ymin, ymax;
+    double restitution = 1.0; // 1.0 = perfect reflection, <1 dampens velocity on bounce
+};
+
+// simple euler step: x += vx * dt, vx += ax*dt, etc. Bounds reflect if provided.
+void euler_step(Particles &particles, const ForceField &forces, double dt,
+                const Boundary *bounds = nullptr);
 
 } // namespace dtt::sim

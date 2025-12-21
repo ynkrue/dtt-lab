@@ -15,6 +15,8 @@ endif()
 option(DTT_BUILD_TESTS "Build unit tests" ON)
 option(DTT_ENABLE_CUDA "Enable CUDA experiments (future work)" OFF)
 option(DTT_ENABLE_CLANG_TIDY "Run clang-tidy if available" OFF)
+option(DTT_BUILD_BENCHMARKS "Build benchmarks (Google Benchmark)" ON)
+option(DTT_BUILD_EXAMPLES "Build example executables" ON)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -28,6 +30,7 @@ add_library(dtt STATIC
   src/dtt.cpp
   src/sim/particles.cpp
   src/sim/forces.cpp
+  src/io/vtk.cpp
 )
 
 target_include_directories(dtt
@@ -99,4 +102,34 @@ if(DTT_BUILD_TESTS)
 
   include(GoogleTest)
   gtest_discover_tests(dtt_tests)
+endif()
+
+if(DTT_BUILD_BENCHMARKS)
+  include(FetchContent)
+  set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
+  FetchContent_Declare(
+    googlebenchmark
+    URL https://github.com/google/benchmark/archive/refs/tags/v1.8.3.zip
+  )
+  FetchContent_MakeAvailable(googlebenchmark)
+
+  add_executable(dtt_bench
+    benchmarks/naive_bench.cpp
+  )
+  target_link_libraries(dtt_bench PRIVATE dtt benchmark::benchmark benchmark::benchmark_main)
+  if(MSVC)
+    target_compile_options(dtt_bench PRIVATE /W4 /permissive-)
+  else()
+    target_compile_options(dtt_bench PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  endif()
+endif()
+
+if(DTT_BUILD_EXAMPLES)
+  add_executable(dtt_sim examples/sim_main.cpp)
+  target_link_libraries(dtt_sim PRIVATE dtt)
+  if(MSVC)
+    target_compile_options(dtt_sim PRIVATE /W4 /permissive-)
+  else()
+    target_compile_options(dtt_sim PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  endif()
 endif()
