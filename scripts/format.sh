@@ -9,4 +9,4 @@ if ! command -v clang-format >/dev/null 2>&1; then
 fi
 
 cmake -S "${ROOT_DIR}" -B "${BUILD_DIR}" >/dev/null
-cmake --build "${BUILD_DIR}" --target format
+cmake --build "${BUILD_DIR}" --target format -j
