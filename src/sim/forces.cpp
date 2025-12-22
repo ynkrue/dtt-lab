@@ -35,7 +35,7 @@ ForceField compute_forces_naive(const Particles &p, ForceParams params) {
     return forces;
 }
 
-void euler_step(Particles &particles, const ForceField &forces, double dt) {
+void euler_step(Particles &particles, const ForceField &forces, double dt, const Boundary *bounds) {
     const std::size_t n = particles.x.size();
     for (std::size_t i = 0; i < n; ++i) {
         const double ax = forces[i][0] / particles.mass[i];
@@ -46,6 +46,23 @@ void euler_step(Particles &particles, const ForceField &forces, double dt) {
 
         particles.x[i] += particles.vx[i] * dt;
         particles.y[i] += particles.vy[i] * dt;
+
+        if (bounds) {
+            if (particles.x[i] < bounds->xmin) {
+                particles.x[i] = bounds->xmin;
+                particles.vx[i] = -particles.vx[i] * bounds->restitution;
+            } else if (particles.x[i] > bounds->xmax) {
+                particles.x[i] = bounds->xmax;
+                particles.vx[i] = -particles.vx[i] * bounds->restitution;
+            }
+            if (particles.y[i] < bounds->ymin) {
+                particles.y[i] = bounds->ymin;
+                particles.vy[i] = -particles.vy[i] * bounds->restitution;
+            } else if (particles.y[i] > bounds->ymax) {
+                particles.y[i] = bounds->ymax;
+                particles.vy[i] = -particles.vy[i] * bounds->restitution;
+            }
+        }
     }
 }
 

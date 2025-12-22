@@ -19,6 +19,10 @@ int main(int argc, char** argv) {
     using dtt::sim::compute_forces_naive;
     using dtt::sim::create_rnd_particles;
     using dtt::sim::euler_step;
+    using dtt::sim::compute_forces_tree;
+    using dtt::tree::BuildParams;
+    using dtt::tree::Tree;
+    using dtt::tree::build_quadtree;
 
     const std::size_t n = (argc > 1) ? static_cast<std::size_t>(std::stoul(argv[1])) : 512;
     const int steps = (argc > 2) ? std::stoi(argv[2]) : 20;
@@ -36,6 +40,12 @@ int main(int argc, char** argv) {
         create_rnd_particles(n, /*seed=*/1234, -half_extent, half_extent, -half_extent,
                              half_extent, 5.0, 50.0, dtt::sim::ParticleDistribution::kNormal, 0.02);
     const ForceParams params{.softening = 1e-3, .cutoff = std::nullopt};
+    const dtt::sim::Boundary bounds{.xmin = -half_extent,
+                                    .xmax = half_extent,
+                                    .ymin = -half_extent,
+                                    .ymax = half_extent,
+                                    .restitution = 0.9};
+    const BuildParams tree_params{.max_leaf_size = 16, .max_levels = 20, .padding = 1e-6};
 
     std::vector<std::pair<double, std::string>> frames;
     frames.reserve(static_cast<std::size_t>(steps));
@@ -45,8 +55,9 @@ int main(int argc, char** argv) {
 
     // main simulation loop
     for (int step = 0; step < steps; ++step) {
-        ForceField forces = compute_forces_naive(particles, params);
-        euler_step(particles, forces, dt);
+        Tree tree = build_quadtree(particles, tree_params);
+        ForceField forces = compute_forces_tree(particles, tree, params);
+        euler_step(particles, forces, dt, &bounds);
 
         std::ostringstream oss;
         oss << out_dir << "/frame_" << std::setw(4) << std::setfill('0') << step << ".vtp";

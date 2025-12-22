@@ -19,6 +19,9 @@ struct ForceParams {
 // naive O(N^2) all-pairs force computation
 ForceField compute_forces_naive(const Particles &particles, ForceParams params);
 
+// tree-based O(N log N) force computation
+ForceField compute_forces_tree(const Particles &particles, tree::Tree &tree, ForceParams params);
+
 // Optional reflecting boundary for integration.
 struct Boundary {
     double xmin, xmax;

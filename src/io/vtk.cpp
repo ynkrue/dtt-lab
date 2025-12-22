@@ -10,18 +10,17 @@ namespace dtt::io {
 
 namespace {
 
-void write_header(std::ofstream& out, const std::string& title) {
+void write_header(std::ofstream &out, const std::string &title) {
     out << "# vtk DataFile Version 3.0\n";
     out << title << "\n";
     out << "ASCII\n";
     out << "DATASET POLYDATA\n";
 }
 
-}  // namespace
+} // namespace
 
-bool write_legacy_vtk(const sim::Particles& particles,
-                      std::string_view file_path,
-                      const sim::ForceField* forces) {
+bool write_legacy_vtk(const sim::Particles &particles, std::string_view file_path,
+                      const sim::ForceField *forces) {
     std::ofstream out{std::string(file_path)};
     if (!out.is_open()) {
         return false;
@@ -56,7 +55,7 @@ bool write_legacy_vtk(const sim::Particles& particles,
 
     if (forces) {
         out << "VECTORS force double\n";
-        for (const auto& f : *forces) {
+        for (const auto &f : *forces) {
             out << f[0] << " " << f[1] << " 0.0\n";
         }
     }
@@ -64,9 +63,8 @@ bool write_legacy_vtk(const sim::Particles& particles,
     return true;
 }
 
-bool write_vtp_polydata(const sim::Particles& particles,
-                        std::string_view file_path,
-                        const sim::ForceField* forces) {
+bool write_vtp_polydata(const sim::Particles &particles, std::string_view file_path,
+                        const sim::ForceField *forces) {
     std::ofstream out{std::string(file_path)};
     if (!out.is_open()) {
         return false;
@@ -102,21 +100,24 @@ bool write_vtp_polydata(const sim::Particles& particles,
     out << "    </Verts>\n";
 
     out << "    <PointData>\n";
-    out << "      <DataArray type=\"Float64\" Name=\"mass\" NumberOfComponents=\"1\" format=\"ascii\">\n";
+    out << "      <DataArray type=\"Float64\" Name=\"mass\" NumberOfComponents=\"1\" "
+           "format=\"ascii\">\n";
     for (double m : particles.mass) {
         out << "        " << m << "\n";
     }
     out << "      </DataArray>\n";
 
-    out << "      <DataArray type=\"Float64\" Name=\"velocity\" NumberOfComponents=\"3\" format=\"ascii\">\n";
+    out << "      <DataArray type=\"Float64\" Name=\"velocity\" NumberOfComponents=\"3\" "
+           "format=\"ascii\">\n";
     for (std::size_t i = 0; i < n; ++i) {
         out << "        " << particles.vx[i] << " " << particles.vy[i] << " 0.0\n";
     }
     out << "      </DataArray>\n";
 
     if (forces) {
-        out << "      <DataArray type=\"Float64\" Name=\"force\" NumberOfComponents=\"3\" format=\"ascii\">\n";
-        for (const auto& f : *forces) {
+        out << "      <DataArray type=\"Float64\" Name=\"force\" NumberOfComponents=\"3\" "
+               "format=\"ascii\">\n";
+        for (const auto &f : *forces) {
             out << "        " << f[0] << " " << f[1] << " 0.0\n";
         }
         out << "      </DataArray>\n";
@@ -130,8 +131,8 @@ bool write_vtp_polydata(const sim::Particles& particles,
     return true;
 }
 
-bool write_pvd_collection(const std::string& pvd_path,
-                          const std::vector<std::pair<double, std::string>>& time_file_pairs) {
+bool write_pvd_collection(const std::string &pvd_path,
+                          const std::vector<std::pair<double, std::string>> &time_file_pairs) {
     std::ofstream out(pvd_path);
     if (!out.is_open()) {
         return false;
@@ -140,7 +141,7 @@ bool write_pvd_collection(const std::string& pvd_path,
     out << R"(<?xml version="1.0"?>)" << "\n";
     out << R"(<VTKFile type="Collection" version="0.1" byte_order="LittleEndian">)" << "\n";
     out << "<Collection>\n";
-    for (const auto& [time, file] : time_file_pairs) {
+    for (const auto &[time, file] : time_file_pairs) {
         out << "  <DataSet timestep=\"" << time << "\" group=\"\" part=\"0\" file=\"" << file
             << "\"/>\n";
     }
@@ -149,4 +150,4 @@ bool write_pvd_collection(const std::string& pvd_path,
     return true;
 }
 
-}  // namespace dtt::io
+} // namespace dtt::io
