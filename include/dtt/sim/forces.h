@@ -1,6 +1,7 @@
 #pragma once
 
 #include "dtt/sim/particles.h"
+#include "dtt/tree/quadtree.h"
 
 #include <array>
 #include <optional>
@@ -20,7 +21,7 @@ struct ForceParams {
 ForceField compute_forces_naive(const Particles &particles, ForceParams params);
 
 // tree-based O(N log N) force computation
-ForceField compute_forces_tree(const Particles &particles, tree::Tree &tree, ForceParams params);
+ForceField compute_forces_tree(const Particles &particles, const tree::Tree &tree, ForceParams params, tree::MAC mac);
 
 // Optional reflecting boundary for integration.
 struct Boundary {
