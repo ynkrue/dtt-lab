@@ -119,6 +119,7 @@ if(DTT_BUILD_BENCHMARKS)
 
   add_executable(dtt_bench
     benchmarks/naive_bench.cpp
+    benchmarks/tree_bench.cpp
   )
   target_link_libraries(dtt_bench PRIVATE dtt benchmark::benchmark benchmark::benchmark_main)
   if(MSVC)
