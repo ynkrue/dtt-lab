@@ -10,7 +10,7 @@ struct Particles {
     std::vector<double> mass;
 };
 
-enum class ParticleDistribution { kUniform, kNormal };
+enum class ParticleDistribution { kUniform, kCluster, kCurl };
 
 // ensure particle data has same size
 bool validate_particles(const Particles &particles);

@@ -23,7 +23,7 @@ ForceField compute_forces_naive(const Particles &p, ForceParams params) {
 
             const double inv_r = 1.0 / std::sqrt(r2);
             const double inv_r3 = inv_r * inv_r * inv_r;
-            const double scale = p.mass[i] * p.mass[j] * inv_r3;
+            const double scale = params.gravity * p.mass[i] * p.mass[j] * inv_r3;
             const double fx = scale * dx;
             const double fy = scale * dy;
 
@@ -53,7 +53,7 @@ ForceField compute_forces_tree(const Particles &particles, const tree::Tree &tre
         const double r2 = dx * dx + dy * dy + params.softening * params.softening;
         const double inv_r = 1.0 / std::sqrt(r2);
         const double inv_r3 = inv_r * inv_r * inv_r;
-        const double scale = particles.mass[i] * particles.mass[j] * inv_r3;
+        const double scale = params.gravity * particles.mass[i] * particles.mass[j] * inv_r3;
         const double fx = scale * dx;
         const double fy = scale * dy;
         forces[i][0] += fx; forces[i][1] += fy;
@@ -94,21 +94,22 @@ ForceField compute_forces_tree(const Particles &particles, const tree::Tree &tre
         const double r2 = dx * dx + dy * dy + params.softening * params.softening;
         const double inv_r = 1.0 / std::sqrt(r2);
         const double inv_r3 = inv_r * inv_r * inv_r;
-        const double fx = a.mass * b.mass * inv_r3 * dx;
-        const double fy = a.mass * b.mass * inv_r3 * dy;
+        const double scale = params.gravity * a.mass * b.mass * inv_r3;
+        const double fx = scale * dx;
+        const double fy = scale * dy;
 
         // Distribute force to all particles in the nodes proportionally to their mass
         for (int k = 0; k < a.count; ++k) {
             std::size_t idx = tree.indices[a.first + k];
             const double m_frac = particles.mass[idx] / a.mass;
-            forces[idx][0] += -1.0 * m_frac * fx;
-            forces[idx][1] += -1.0 * m_frac * fy;
+            forces[idx][0] += m_frac * fx;
+            forces[idx][1] += m_frac * fy;
         }
         for (int k = 0; k < b.count; ++k) {
             std::size_t idx = tree.indices[b.first + k];
             const double m_frac = particles.mass[idx] / b.mass;
-            forces[idx][0] += m_frac * fx;
-            forces[idx][1] += m_frac * fy;
+            forces[idx][0] -= m_frac * fx;
+            forces[idx][1] -= m_frac * fy;
         }
     };
 

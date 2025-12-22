@@ -23,19 +23,26 @@ int main(int argc, char** argv) {
     const std::size_t n = (argc > 1) ? static_cast<std::size_t>(std::stoul(argv[1])) : 512;
     const int steps = (argc > 2) ? std::stoi(argv[2]) : 20;
     const double dt = (argc > 3) ? std::stod(argv[3]) : 0.01;
-    const std::string out_dir = (argc > 4) ? argv[4] : "output";
+    const std::string dist = (argc > 4) ? std::string(argv[4]) : "uniform";
+    const std::string out_dir = (argc > 5) ? argv[5] : "output";
 
     std::cout << "Running naive simulation with n=" << n << ", steps=" << steps
-              << ", dt=" << dt << "\n";
+              << ", dt=" << dt << ", distribution=" << dist << "\n";
 
     std::filesystem::create_directories(out_dir);
 
     // Scale initial domain with sqrt(n) to keep density roughly constant as n grows.
     const double half_extent = 0.75 * std::sqrt(static_cast<double>(n));
+    auto distribution = dtt::sim::ParticleDistribution::kUniform;
+    if (dist == "cluster") {
+        distribution = dtt::sim::ParticleDistribution::kCluster;
+    } else if (dist == "curl") {
+        distribution = dtt::sim::ParticleDistribution::kCurl;
+    }
     Particles particles =
         create_rnd_particles(n, /*seed=*/1234, -half_extent, half_extent, -half_extent,
-                             half_extent, 5.0, 50.0, dtt::sim::ParticleDistribution::kNormal, 0.02);
-    const ForceParams params{.softening = 1e-3, .cutoff = std::nullopt};
+                             half_extent, 1.0, 5.0, distribution, 0.02);
+    const ForceParams params{.softening = 1e-3, .cutoff = std::nullopt, .gravity = 9.0};
     const dtt::sim::Boundary bounds{.xmin = -half_extent,
                                     .xmax = half_extent,
                                     .ymin = -half_extent,

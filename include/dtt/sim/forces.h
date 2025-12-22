@@ -15,6 +15,7 @@ using ForceField = std::vector<Force2D>;
 struct ForceParams {
     double softening;
     std::optional<double> cutoff;
+    double gravity = 5.0; // scaling factor for interaction strength
 };
 
 // naive O(N^2) all-pairs force computation
@@ -27,7 +28,7 @@ ForceField compute_forces_tree(const Particles &particles, const tree::Tree &tre
 struct Boundary {
     double xmin, xmax;
     double ymin, ymax;
-    double restitution = 1.0; // 1.0 = perfect reflection, <1 dampens velocity on bounce
+    double restitution = 0.8; // 1.0 = perfect reflection, <1 dampens velocity on bounce
 };
 
 // simple euler step: x += vx * dt, vx += ax*dt, etc. Bounds reflect if provided.

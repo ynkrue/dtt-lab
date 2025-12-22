@@ -13,7 +13,7 @@ TEST(ForcesTest, TwoParticleSymmetry) {
     p.vy = {0.0, 0.0};
     p.mass = {1.0, 1.0};
 
-    ForceParams params{.softening = 1e-9, .cutoff = std::nullopt};
+    ForceParams params{.softening = 1e-9, .cutoff = std::nullopt, .gravity = 1.0};
     ForceField f = compute_forces_naive(p, params);
 
     ASSERT_EQ(f.size(), 2u);
@@ -31,7 +31,7 @@ TEST(ForcesTest, RespectsCutoff) {
     p.vy = {0.0, 0.0};
     p.mass = {1.0, 1.0};
 
-    ForceParams params{.softening = 1e-6, .cutoff = 1.0};
+    ForceParams params{.softening = 1e-6, .cutoff = 1.0, .gravity = 1.0};
     ForceField f = compute_forces_naive(p, params);
 
     EXPECT_NEAR(f[0][0], 0.0, 1e-12);
