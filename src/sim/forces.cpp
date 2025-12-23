@@ -4,6 +4,8 @@
 #include <cmath>
 #include <limits>
 
+#include <cblas.h>
+
 namespace dtt::sim {
 
 ForceField compute_forces_naive(const Particles &p, ForceParams params) {

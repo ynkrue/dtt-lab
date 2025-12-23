@@ -29,11 +29,19 @@ int main(int argc, char** argv) {
     const int steps = (argc > 2) ? std::stoi(argv[2]) : 20;
     const double dt = (argc > 3) ? std::stod(argv[3]) : 0.01;
     std::string dist_arg = (argc > 4) ? std::string(argv[4]) : "uniform";
-    const std::string out_dir = (argc > 5) ? std::string(argv[5]) : "output";
+    const double cutoff = (argc > 5) ? std::stod(argv[5]) : std::numeric_limits<double>::quiet_NaN();
+    const double gravity = (argc > 6) ? std::stod(argv[6]) : 9.0;
+    const double theta = (argc > 7) ? std::stod(argv[7]) : 0.7;
+    const std::string out_dir = (argc > 8) ? std::string(argv[8]) : "output_tree";
 
 
     std::cout << "Running dtt simulation with n=" << n << ", steps=" << steps
-              << ", dt=" << dt << ", distribution=" << dist_arg << "\n";
+              << ", dt=" << dt << ", distribution=" << dist_arg
+              << ", gravity=" << gravity << ", theta=" << theta;
+    if (!std::isnan(cutoff)) {
+        std::cout << ", cutoff=" << cutoff;
+    }
+    std::cout << "\n";
 
     std::filesystem::create_directories(out_dir);
 
@@ -49,14 +57,15 @@ int main(int argc, char** argv) {
     Particles particles =
         create_rnd_particles(n, /*seed=*/1234, -half_extent, half_extent, -half_extent,
                              half_extent, 1.0, 5.0, distribution, 0.02);
-    const ForceParams params{.softening = 1e-3, .cutoff = std::nullopt, .gravity = 9.0};
+    std::optional<double> cutoff_opt = std::isnan(cutoff) ? std::nullopt : std::make_optional(cutoff);
+    const ForceParams params{.softening = 1e-3, .cutoff = cutoff_opt, .gravity = gravity};
     const dtt::sim::Boundary bounds{.xmin = -half_extent,
                                     .xmax = half_extent,
                                     .ymin = -half_extent,
                                     .ymax = half_extent,
                                     .restitution = 0.9};
     const BuildParams tree_params{.max_leaf_size = 16, .max_depth = 20, .padding = 1e-6};
-    const MAC mac{.theta = 0.7};
+    const MAC mac{.theta = theta};
 
     std::vector<std::pair<double, std::string>> frames;
     frames.reserve(static_cast<std::size_t>(steps));
