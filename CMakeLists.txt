@@ -18,6 +18,8 @@ option(DTT_ENABLE_CLANG_TIDY "Run clang-tidy if available" OFF)
 option(DTT_BUILD_BENCHMARKS "Build benchmarks (Google Benchmark)" ON)
 option(DTT_BUILD_EXAMPLES "Build example executables" ON)
 
+add_compile_options(-Wno-overriding-deployment-version)
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 if(DTT_ENABLE_CUDA)
@@ -35,6 +37,23 @@ add_library(dtt STATIC
   src/tree/morton.cpp
   src/tree/quadtree.cpp
 )
+
+# CBLAS header lookup (OpenBLAS/Homebrew and common paths)
+set(CBLAS_INCLUDE_DIR "" CACHE PATH "Path to cblas.h")
+if(NOT CBLAS_INCLUDE_DIR)
+  find_path(CBLAS_INCLUDE_DIR cblas.h
+    HINTS
+      ${BLAS_INCLUDE_DIRS}
+      /opt/homebrew/opt/openblas/include
+      /usr/local/opt/openblas/include
+      /opt/homebrew/include
+      /usr/local/include
+  )
+endif()
+if(NOT CBLAS_INCLUDE_DIR)
+  message(FATAL_ERROR "cblas.h not found. Set -DCBLAS_INCLUDE_DIR=/path/to/openblas/include")
+endif()
+target_include_directories(dtt PRIVATE ${CBLAS_INCLUDE_DIR})
 
 target_include_directories(dtt
   PUBLIC

@@ -35,4 +35,7 @@ struct Boundary {
 void euler_step(Particles &particles, const ForceField &forces, double dt,
                 const Boundary *bounds = nullptr);
 
+void euler_step_blas(Particles &particles, const ForceField &forces, double dt,
+                     const Boundary *bounds = nullptr);
+
 } // namespace dtt::sim

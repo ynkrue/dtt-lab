@@ -151,4 +151,43 @@ void euler_step(Particles &particles, const ForceField &forces, double dt, const
     }
 }
 
+void euler_step_blas(Particles &particles, const ForceField &forces, double dt, const Boundary *bounds) {
+    const std::size_t n = particles.x.size();
+
+    // Compute accelerations
+    std::vector<double> ax(n), ay(n);
+    for (std::size_t i = 0; i < n; ++i) {
+        ax[i] = forces[i][0] / particles.mass[i];
+        ay[i] = forces[i][1] / particles.mass[i];
+    }
+
+    // Update velocities
+    cblas_daxpy(n, dt, ax.data(), 1, particles.vx.data(), 1);
+    cblas_daxpy(n, dt, ay.data(), 1, particles.vy.data(), 1);
+
+    // Update positions
+    cblas_daxpy(n, dt, particles.vx.data(), 1, particles.x.data(), 1);
+    cblas_daxpy(n, dt, particles.vy.data(), 1, particles.y.data(), 1);
+
+    // Handle boundaries
+    if (bounds) {
+        for (std::size_t i = 0; i < n; ++i) {
+            if (particles.x[i] < bounds->xmin) {
+                particles.x[i] = bounds->xmin;
+                particles.vx[i] = -particles.vx[i] * bounds->restitution;
+            } else if (particles.x[i] > bounds->xmax) {
+                particles.x[i] = bounds->xmax;
+                particles.vx[i] = -particles.vx[i] * bounds->restitution;
+            }
+            if (particles.y[i] < bounds->ymin) {
+                particles.y[i] = bounds->ymin;
+                particles.vy[i] = -particles.vy[i] * bounds->restitution;
+            } else if (particles.y[i] > bounds->ymax) {
+                particles.y[i] = bounds->ymax;
+                particles.vy[i] = -particles.vy[i] * bounds->restitution;
+            }
+        }
+    }
+}
+
 } // namespace dtt::sim
