@@ -3,6 +3,8 @@
 #include "dtt/tree/bounding_box.h"
 
 #include <cstdint>
+#include <utility>
+#include <vector>
 
 namespace dtt::tree {
 
@@ -27,5 +29,7 @@ inline void morton_decode_2d(uint64_t code, uint32_t &x, uint32_t &y) {
 void normalize_point(const BoundingBox &root, double x, double y, double &nx, double &ny);
 
 uint64_t morton_from_normalized(double nx, double ny, uint32_t levels);
+
+void radix_sort_morton(std::vector<std::pair<uint64_t, std::size_t>> &keys);
 
 } // namespace dtt::tree

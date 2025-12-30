@@ -43,9 +43,7 @@ Tree build_quadtree(const sim::Particles &particles, const BuildParams &params) 
     }
 
     // sort by morton code
-    std::sort(morton_keys.begin(), morton_keys.end(), [](const auto &a, const auto &b) {
-        return a.first < b.first;
-    });
+    radix_sort_morton(morton_keys);
 
     // fill in permutation
     tree.indices.resize(n);
@@ -53,7 +51,6 @@ Tree build_quadtree(const sim::Particles &particles, const BuildParams &params) 
         tree.indices[i] = morton_keys[i].second;
     }
 
-    
     // build tree nodes
     tree.nodes.clear();
     tree.nodes.reserve(2 * n); // rough estimate

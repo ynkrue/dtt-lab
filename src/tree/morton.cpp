@@ -16,4 +16,37 @@ uint64_t morton_from_normalized(double nx, double ny, uint32_t levels) {
     return morton_encode_2d(ix, iy);
 }
 
+void radix_sort_morton(std::vector<std::pair<uint64_t, std::size_t>> &keys) {
+    const std::size_t n = keys.size();
+    std::vector<std::pair<uint64_t, std::size_t>> temp(n);
+    const int bits_per_pass = 16;
+    const int num_passes = (64 + bits_per_pass - 1) / bits_per_pass;
+    const int bucket_size = 1 << bits_per_pass;
+
+    for (int pass = 0; pass < num_passes; ++pass) {
+        std::vector<int> count(bucket_size, 0);
+        int shift = pass * bits_per_pass;
+
+        // counting occurrences
+        for (std::size_t i = 0; i < n; ++i) {
+            uint64_t key = (keys[i].first >> shift) & (bucket_size - 1);
+            count[key]++;
+        }
+
+        // compute prefix sums
+        for (int i = 1; i < bucket_size; ++i) {
+            count[i] += count[i - 1];
+        }
+
+        // build output array
+        for (std::size_t i = n; i-- > 0;) {
+            uint64_t key = (keys[i].first >> shift) & (bucket_size - 1);
+            temp[--count[key]] = keys[i];
+        }
+
+        // copy back to original array
+        keys.swap(temp);
+    }
+}
+
 } // namespace dtt::tree
