@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.27)
 
-project(dtt_lab VERSION 0.1.0 LANGUAGES CXX)
+project(dtt-lab VERSION 0.1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -26,8 +26,6 @@ if(DTT_ENABLE_CUDA)
   enable_language(CUDA)
 endif()
 
-find_package(BLAS REQUIRED)
-
 add_library(dtt STATIC
   src/dtt.cpp
   src/sim/particles.cpp
@@ -38,34 +36,11 @@ add_library(dtt STATIC
   src/tree/quadtree.cpp
 )
 
-# CBLAS header lookup (OpenBLAS/Homebrew and common paths)
-set(CBLAS_INCLUDE_DIR "" CACHE PATH "Path to cblas.h")
-if(NOT CBLAS_INCLUDE_DIR)
-  find_path(CBLAS_INCLUDE_DIR cblas.h
-    HINTS
-      ${BLAS_INCLUDE_DIRS}
-      /opt/homebrew/opt/openblas/include
-      /usr/local/opt/openblas/include
-      /opt/homebrew/include
-      /usr/local/include
-  )
-endif()
-if(NOT CBLAS_INCLUDE_DIR)
-  message(FATAL_ERROR "cblas.h not found. Set -DCBLAS_INCLUDE_DIR=/path/to/openblas/include")
-endif()
-target_include_directories(dtt PRIVATE ${CBLAS_INCLUDE_DIR})
-
 target_include_directories(dtt
   PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
-
-if(TARGET BLAS::BLAS)
-  target_link_libraries(dtt PUBLIC BLAS::BLAS)
-else()
-  target_link_libraries(dtt PUBLIC ${BLAS_LIBRARIES})
-endif()
 
 if(MSVC)
   target_compile_options(dtt PRIVATE /W4 /permissive- /w44242 /w44061 /w44062 /wd4464)
@@ -109,22 +84,22 @@ if(DTT_BUILD_TESTS)
   set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
   FetchContent_MakeAvailable(googletest)
 
-  add_executable(dtt_tests
+  add_executable(dtt-tests
     tests/dummy_test.cpp
     tests/particles_test.cpp
     tests/forces_test.cpp
     tests/quadtree_test.cpp
   )
-  target_link_libraries(dtt_tests PRIVATE dtt GTest::gtest_main)
+  target_link_libraries(dtt-tests PRIVATE dtt GTest::gtest_main)
 
   if(MSVC)
-    target_compile_options(dtt_tests PRIVATE /W4 /permissive-)
+    target_compile_options(dtt-tests PRIVATE /W4 /permissive-)
   else()
-    target_compile_options(dtt_tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    target_compile_options(dtt-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
   endif()
 
   include(GoogleTest)
-  gtest_discover_tests(dtt_tests)
+  gtest_discover_tests(dtt-tests)
 endif()
 
 if(DTT_BUILD_BENCHMARKS)
@@ -136,31 +111,32 @@ if(DTT_BUILD_BENCHMARKS)
   )
   FetchContent_MakeAvailable(googlebenchmark)
 
-  add_executable(dtt_bench
+  add_executable(dtt-bench
     benchmarks/naive_bench.cpp
     benchmarks/tree_bench.cpp
+    benchmarks/function_bench.cpp
   )
-  target_link_libraries(dtt_bench PRIVATE dtt benchmark::benchmark benchmark::benchmark_main)
+  target_link_libraries(dtt-bench PRIVATE dtt benchmark::benchmark benchmark::benchmark_main)
   if(MSVC)
-    target_compile_options(dtt_bench PRIVATE /W4 /permissive-)
+    target_compile_options(dtt-bench PRIVATE /W4 /permissive-)
   else()
-    target_compile_options(dtt_bench PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    target_compile_options(dtt-bench PRIVATE -Wall -Wextra -Wpedantic -Werror)
   endif()
 endif()
 
 if(DTT_BUILD_EXAMPLES)
-  add_executable(dtt_sim_naive examples/sim_main_naive.cpp)
-  add_executable(dtt_sim_tree examples/sim_main_tree.cpp)
-  target_link_libraries(dtt_sim_naive PRIVATE dtt)
+  add_executable(dtt-sim_naive examples/sim_main_naive.cpp)
+  add_executable(dtt-sim_tree examples/sim_main_tree.cpp)
+  target_link_libraries(dtt-sim_naive PRIVATE dtt)
   if(MSVC)
-    target_compile_options(dtt_sim_naive PRIVATE /W4 /permissive-)
+    target_compile_options(dtt-sim_naive PRIVATE /W4 /permissive-)
   else()
-    target_compile_options(dtt_sim_naive PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    target_compile_options(dtt-sim_naive PRIVATE -Wall -Wextra -Wpedantic -Werror)
   endif()
-  target_link_libraries(dtt_sim_tree PRIVATE dtt)
+  target_link_libraries(dtt-sim_tree PRIVATE dtt)
   if(MSVC)
-    target_compile_options(dtt_sim_tree PRIVATE /W4 /permissive-)
+    target_compile_options(dtt-sim_tree PRIVATE /W4 /permissive-)
   else()
-    target_compile_options(dtt_sim_tree PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    target_compile_options(dtt-sim_tree PRIVATE -Wall -Wextra -Wpedantic -Werror)
   endif()
 endif()

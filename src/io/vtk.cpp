@@ -8,61 +8,6 @@
 
 namespace dtt::io {
 
-namespace {
-
-void write_header(std::ofstream &out, const std::string &title) {
-    out << "# vtk DataFile Version 3.0\n";
-    out << title << "\n";
-    out << "ASCII\n";
-    out << "DATASET POLYDATA\n";
-}
-
-} // namespace
-
-bool write_legacy_vtk(const sim::Particles &particles, std::string_view file_path,
-                      const sim::ForceField *forces) {
-    std::ofstream out{std::string(file_path)};
-    if (!out.is_open()) {
-        return false;
-    }
-
-    const std::size_t n = particles.x.size();
-    write_header(out, "dtt particles");
-
-    out << "POINTS " << n << " double\n";
-    out << std::setprecision(12);
-    for (std::size_t i = 0; i < n; ++i) {
-        out << particles.x[i] << " " << particles.y[i] << " 0.0\n";
-    }
-
-    // Represent each particle as a vertex cell so ParaView treats them individually.
-    out << "VERTICES " << n << " " << 2 * n << "\n";
-    for (std::size_t i = 0; i < n; ++i) {
-        out << "1 " << i << "\n";
-    }
-
-    out << "POINT_DATA " << n << "\n";
-    out << "SCALARS mass double 1\n";
-    out << "LOOKUP_TABLE default\n";
-    for (double m : particles.mass) {
-        out << m << "\n";
-    }
-
-    out << "VECTORS velocity double\n";
-    for (std::size_t i = 0; i < n; ++i) {
-        out << particles.vx[i] << " " << particles.vy[i] << " 0.0\n";
-    }
-
-    if (forces) {
-        out << "VECTORS force double\n";
-        for (const auto &f : *forces) {
-            out << f[0] << " " << f[1] << " 0.0\n";
-        }
-    }
-
-    return true;
-}
-
 bool write_vtp_polydata(const sim::Particles &particles, std::string_view file_path,
                         const sim::ForceField *forces) {
     std::ofstream out{std::string(file_path)};

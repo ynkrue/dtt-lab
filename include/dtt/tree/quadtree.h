@@ -40,7 +40,6 @@ BoundingBox compute_root_bbox(const sim::Particles &particles, double padding);
 
 Tree build_quadtree(const sim::Particles &particles, const BuildParams &params);
 
-
 struct TraversalStats {
     uint64_t popped = 0;
     uint64_t refined = 0;
@@ -93,28 +92,32 @@ void dual_tree_traversal(const Tree &tree, const MAC &mac, LeafFunc on_leaf_pair
         // cluster-cluster interaction
         if (accept(a, b, mac)) {
             on_accepted_pair(a, b);
-            if (stats) stats->accepted++;
+            if (stats)
+                stats->accepted++;
             continue;
         }
 
         // leaf-leaf interaction
         if (a_leaf && b_leaf) {
             on_leaf_pair(a, b);
-            if (stats) stats->leaf_leaf++;
+            if (stats)
+                stats->leaf_leaf++;
             continue;
         }
 
         // refine
-        const bool refine_a = !a_leaf && (b_leaf || a.bbox.max_extent() >= b.bbox.max_extent() ||
-                                          a.count >= b.count);
+        const bool refine_a =
+            !a_leaf && (b_leaf || a.bbox.max_extent() >= b.bbox.max_extent() || a.count >= b.count);
         if (ia == ib) {
             // self-interaction, generate unique pairs only
             for (int i = 0; i < 4; ++i) {
                 const int ca = a.children[i];
-                if (ca == -1) continue;
+                if (ca == -1)
+                    continue;
                 for (int j = i; j < 4; ++j) {
                     const int cb = a.children[j];
-                    if (cb == -1) continue;
+                    if (cb == -1)
+                        continue;
                     push_if_valid(ca, cb);
                 }
             }
@@ -131,7 +134,8 @@ void dual_tree_traversal(const Tree &tree, const MAC &mac, LeafFunc on_leaf_pair
                 push_if_valid(ia, cb);
             }
         }
-        if (stats) stats->refined++;
+        if (stats)
+            stats->refined++;
     }
 }
 

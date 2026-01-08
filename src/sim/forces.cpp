@@ -4,8 +4,6 @@
 #include <cmath>
 #include <limits>
 
-#include <cblas.h>
-
 namespace dtt::sim {
 
 ForceField compute_forces_naive(const Particles &p, ForceParams params) {
@@ -45,8 +43,9 @@ ForceField compute_forces_tree(const Particles &particles, const tree::Tree &tre
 
     // cutoff nodes with large distance
     auto prune = [&](const tree::Node &a, const tree::Node &b) {
-        if (!params.cutoff) return false;
-        const double cutoff_sq= (*params.cutoff) * (*params.cutoff);
+        if (!params.cutoff)
+            return false;
+        const double cutoff_sq = (*params.cutoff) * (*params.cutoff);
         return a.bbox.distance_lower_bound_sq(b.bbox) > cutoff_sq;
     };
 
@@ -58,12 +57,13 @@ ForceField compute_forces_tree(const Particles &particles, const tree::Tree &tre
         const double scale = params.gravity * particles.mass[i] * particles.mass[j] * inv_r3;
         const double fx = scale * dx;
         const double fy = scale * dy;
-        forces[i][0] += fx; forces[i][1] += fy;
-        forces[j][0] -= fx; forces[j][1] -= fy;
+        forces[i][0] += fx;
+        forces[i][1] += fy;
+        forces[j][0] -= fx;
+        forces[j][1] -= fy;
     };
 
-
-    auto on_leaf_pair = [&](const tree::Node& a, const tree::Node& b) {
+    auto on_leaf_pair = [&](const tree::Node &a, const tree::Node &b) {
         const int a_first = a.first, a_count = a.count;
         const int b_first = b.first, b_count = b.count;
         if (&a == &b) {
@@ -90,7 +90,7 @@ ForceField compute_forces_tree(const Particles &particles, const tree::Tree &tre
     };
 
     // approximate cluster-cluster interaction (point at COM)
-    auto on_accepted_pair = [&](const tree::Node& a, const tree::Node& b) {
+    auto on_accepted_pair = [&](const tree::Node &a, const tree::Node &b) {
         const double dx = b.com_x - a.com_x;
         const double dy = b.com_y - a.com_y;
         const double r2 = dx * dx + dy * dy + params.softening * params.softening;
@@ -133,45 +133,6 @@ void euler_step(Particles &particles, const ForceField &forces, double dt, const
         particles.y[i] += particles.vy[i] * dt;
 
         if (bounds) {
-            if (particles.x[i] < bounds->xmin) {
-                particles.x[i] = bounds->xmin;
-                particles.vx[i] = -particles.vx[i] * bounds->restitution;
-            } else if (particles.x[i] > bounds->xmax) {
-                particles.x[i] = bounds->xmax;
-                particles.vx[i] = -particles.vx[i] * bounds->restitution;
-            }
-            if (particles.y[i] < bounds->ymin) {
-                particles.y[i] = bounds->ymin;
-                particles.vy[i] = -particles.vy[i] * bounds->restitution;
-            } else if (particles.y[i] > bounds->ymax) {
-                particles.y[i] = bounds->ymax;
-                particles.vy[i] = -particles.vy[i] * bounds->restitution;
-            }
-        }
-    }
-}
-
-void euler_step_blas(Particles &particles, const ForceField &forces, double dt, const Boundary *bounds) {
-    const std::size_t n = particles.x.size();
-
-    // Compute accelerations
-    std::vector<double> ax(n), ay(n);
-    for (std::size_t i = 0; i < n; ++i) {
-        ax[i] = forces[i][0] / particles.mass[i];
-        ay[i] = forces[i][1] / particles.mass[i];
-    }
-
-    // Update velocities
-    cblas_daxpy(n, dt, ax.data(), 1, particles.vx.data(), 1);
-    cblas_daxpy(n, dt, ay.data(), 1, particles.vy.data(), 1);
-
-    // Update positions
-    cblas_daxpy(n, dt, particles.vx.data(), 1, particles.x.data(), 1);
-    cblas_daxpy(n, dt, particles.vy.data(), 1, particles.y.data(), 1);
-
-    // Handle boundaries
-    if (bounds) {
-        for (std::size_t i = 0; i < n; ++i) {
             if (particles.x[i] < bounds->xmin) {
                 particles.x[i] = bounds->xmin;
                 particles.vx[i] = -particles.vx[i] * bounds->restitution;

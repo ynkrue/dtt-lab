@@ -10,11 +10,6 @@
 
 namespace dtt::io {
 
-// Write particles (and optional forces) as legacy ASCII VTK PolyData.
-// Points are (x, y, 0). Outputs VERTICES so ParaView treats them as particles.
-bool write_legacy_vtk(const sim::Particles &particles, std::string_view file_path,
-                      const sim::ForceField *forces = nullptr);
-
 // Write particles as XML .vtp PolyData so they can be used in a .pvd collection.
 bool write_vtp_polydata(const sim::Particles &particles, std::string_view file_path,
                         const sim::ForceField *forces = nullptr);

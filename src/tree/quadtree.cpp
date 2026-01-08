@@ -25,7 +25,8 @@ BoundingBox compute_root_bbox(const sim::Particles &particles, double padding) {
 Tree build_quadtree(const sim::Particles &particles, const BuildParams &params) {
     const std::size_t n = particles.x.size();
     Tree tree;
-    if (n == 0) return tree;
+    if (n == 0)
+        return tree;
 
     // compute root bounding box
     BoundingBox root_bbox = compute_root_bbox(particles, params.padding);
@@ -35,7 +36,7 @@ Tree build_quadtree(const sim::Particles &particles, const BuildParams &params) 
     std::vector<std::pair<uint64_t, std::size_t>> morton_keys;
     morton_keys.reserve(n);
     const uint32_t levels = static_cast<uint32_t>(std::min(params.max_depth, 21));
-    
+
     for (std::size_t i = 0; i < n; ++i) {
         double nx, ny;
         normalize_point(root_bbox, particles.x[i], particles.y[i], nx, ny);
@@ -54,7 +55,7 @@ Tree build_quadtree(const sim::Particles &particles, const BuildParams &params) 
     // build tree nodes
     tree.nodes.clear();
     tree.nodes.reserve(2 * n); // rough estimate
-    
+
     Node root{};
     root.bbox = root_bbox;
     std::fill(std::begin(root.children), std::end(root.children), -1);
@@ -114,7 +115,8 @@ Tree build_quadtree(const sim::Particles &particles, const BuildParams &params) 
         for (int q = 0; q < 4; ++q) {
             child_first[q] = write;
             child_count[q] = static_cast<int>(buckets[q].size());
-            for (std::size_t idx : buckets[q]) tree.indices[write++] = idx;
+            for (std::size_t idx : buckets[q])
+                tree.indices[write++] = idx;
         }
 
         // create child nodes
@@ -154,7 +156,8 @@ Tree build_quadtree(const sim::Particles &particles, const BuildParams &params) 
         tight.max_x = tight.max_y = -std::numeric_limits<double>::infinity();
         for (int q = 0; q < 4; ++q) {
             int ci = node.children[q];
-            if (ci == -1) continue;
+            if (ci == -1)
+                continue;
             const Node &ch = tree.nodes[ci];
             total_mass += ch.mass;
             com_x += ch.mass * ch.com_x;
@@ -171,13 +174,15 @@ Tree build_quadtree(const sim::Particles &particles, const BuildParams &params) 
 }
 
 bool accept(const Node &a, const Node &b, const MAC &mac) {
-    if (&a == &b) return false;
+    if (&a == &b)
+        return false;
     const double dx = a.com_x - b.com_x;
     const double dy = a.com_y - b.com_y;
     const double dist_sq = dx * dx + dy * dy + 1e-18;
     const double size = std::max(a.bbox.max_extent(), b.bbox.max_extent());
-    if (mac.theta <= 0.0) return false;
+    if (mac.theta <= 0.0)
+        return false;
     return (size * size) < (mac.theta * mac.theta * dist_sq);
 }
 
-}
+} // namespace dtt::tree

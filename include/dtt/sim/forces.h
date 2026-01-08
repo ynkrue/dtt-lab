@@ -22,7 +22,8 @@ struct ForceParams {
 ForceField compute_forces_naive(const Particles &particles, ForceParams params);
 
 // tree-based O(N log N) force computation
-ForceField compute_forces_tree(const Particles &particles, const tree::Tree &tree, ForceParams params, tree::MAC mac);
+ForceField compute_forces_tree(const Particles &particles, const tree::Tree &tree,
+                               ForceParams params, tree::MAC mac);
 
 // Optional reflecting boundary for integration.
 struct Boundary {
@@ -34,8 +35,5 @@ struct Boundary {
 // simple euler step: x += vx * dt, vx += ax*dt, etc. Bounds reflect if provided.
 void euler_step(Particles &particles, const ForceField &forces, double dt,
                 const Boundary *bounds = nullptr);
-
-void euler_step_blas(Particles &particles, const ForceField &forces, double dt,
-                     const Boundary *bounds = nullptr);
 
 } // namespace dtt::sim

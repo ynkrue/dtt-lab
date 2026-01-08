@@ -51,6 +51,7 @@ cmake -S . -B build -DDTT_BUILD_EXAMPLES=ON
 cmake --build build --target dtt-sim
 ./build/dtt-sim 512 20 0.01 output
 ```
+
 Open `output/frames.pvd` in ParaView and press Play.
 
 ## Project layout
