@@ -1,14 +1,14 @@
 # dtt-lab
 
-CPU-first dual-tree traversal (DTT) sandbox for N-body style problems, with a clean path to CUDA.
-We start with naive baselines, add spatial trees, and layer prune/accept/refine rules before
-translating the control structure to GPUs. Output snapshots will be written as VTK files so you can
+CPU dual-tree traversal (DTT) sandbox for N-body style problems, with GPU extension (cuda kernels wip).
+The library implements a naive baselines, spatial trees, and layer prune/accept/refine rules.
+Translating the control structure to GPUs is in the works. Output snapshots will be written as VTK files so you can
 visualize and animate runs in ParaView.
 
 ## Prerequisites
 
-- CMake ≥ 3.27
-- C++20 compiler (Clang or GCC recommended)
+- CMake ≥ 3.26
+- C++20 compiler
 - BLAS
 - Optional: `clang-format`, `clang-tidy`
 
@@ -23,7 +23,7 @@ ctest --test-dir build
 ### Useful options
 
 - `-DDTT_BUILD_TESTS=ON` (default): build GoogleTest suite.
-- `-DDTT_ENABLE_CUDA=ON`: enable CUDA language for GPU (no kernels yet).
+- `-DDTT_ENABLE_CUDA=ON`: enable CUDA language for GPU.
 - `-DDTT_ENABLE_CLANG_TIDY=ON`: run clang-tidy if found.
 - `-DDTT_BUILD_BENCHMARKS=ON` (default): build Google Benchmark harnesses.
 - `-DDTT_BUILD_EXAMPLES=ON` (default): build example executables.
@@ -40,42 +40,25 @@ cmake --build build --target format
 
 ```bash
 cmake -S . -B build -DDTT_BUILD_BENCHMARKS=ON
-cmake --build build --target dtt_bench
-./build/dtt_bench
+cmake --build build --target dtt-bench
+./build/dtt-bench
 ```
 
 ### Simulation example + ParaView
 
 ```bash
 cmake -S . -B build -DDTT_BUILD_EXAMPLES=ON
-cmake --build build --target dtt_sim
-./build/dtt_sim 512 20 0.01 output
+cmake --build build --target dtt-sim
+./build/dtt-sim 512 20 0.01 output
 ```
 Open `output/frames.pvd` in ParaView and press Play.
 
 ## Project layout
 
-- `include/` public headers (core data structures, traversal interfaces)
+- `include/` public headers
 - `src/` library sources
+- `cuda/` public headers and source code for cude device code
 - `tests/` GoogleTest suite
-- `benchmarks/` performance harnesses
+- `benchmarks/` performance benchmark harnesses
 - `examples/` small runs that emit VTK output for ParaView
 - `docs/CONVENTIONS.md` coding standards and design notes
-- `cmake/` helper modules (e.g., BLAS, CUDA toggles)
-
-## ParaView workflow (planned)
-
-Examples will emit `.vtk` snapshots plus a `.pvd` collection file. Open `output.pvd` in ParaView and press Play to animate.
-
-## Roadmap (phases)
-
-1) Naive O(n²) N-body baseline
-2) Optional cutoff prune
-3) Spatial tree (quadtree/octree)
-4) Dual-tree traversal scaffold
-5) Exact cutoff via prune
-6) Approximate long-range accept/refine (Barnes–Hut style)
-7) Instrumentation and edge cases
-8) CUDA translation using the same control structure
-
-See `docs/CONVENTIONS.md` for coding style and design principles.
