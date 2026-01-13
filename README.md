@@ -23,10 +23,10 @@ ctest --test-dir build
 ### Useful options
 
 - `-DDTT_BUILD_TESTS=ON` (default): build GoogleTest suite.
-- `-DDTT_ENABLE_CUDA=ON`: enable CUDA language for GPU.
-- `-DDTT_ENABLE_CLANG_TIDY=ON`: run clang-tidy if found.
 - `-DDTT_BUILD_BENCHMARKS=ON` (default): build Google Benchmark harnesses.
 - `-DDTT_BUILD_EXAMPLES=ON` (default): build example executables.
+- `-DDTT_ENABLE_CUDA=ON`: enable CUDA language for GPU.
+- `-DDTT_ENABLE_CLANG_TIDY=ON`: run clang-tidy if found.
 
 ### Formatting
 
