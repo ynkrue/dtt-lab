@@ -19,8 +19,6 @@ public:
     explicit Error(std::string msg = "Unknown error") : message_(std::move(msg)) {}
     const char *what() const noexcept override { return message_.c_str(); }
     virtual ~Error() = default;
-
-protected:
     std::string message_;
 };
 
@@ -28,7 +26,7 @@ protected:
  * @brief Create an error of type T with a given message.
  */
 template <typename T, typename... Args>
-T make_error(std::string msg, Args &&...args)
+T makeError(std::string msg, Args &&...args)
     requires std::is_base_of_v<Error, T>
 {
     T err(std::forward<Args>(args)...);
@@ -46,6 +44,13 @@ struct CudaError : public Error {
 };
 #endif
 
+/**
+ * @brief Generic memory allocation error.
+ */
+struct MemoryError : public Error {
+    using Error::Error;
+};
+
 } // namespace dtt
 
 #ifdef DTT_ENABLE_CUDA
@@ -56,7 +61,7 @@ struct CudaError : public Error {
     do {                                                                                  \
         cudaError_t _err = (call);                                                        \
         if (_err != cudaSuccess) {                                                        \
-            throw dtt::make_error<dtt::CudaError>(                                        \
+            throw dtt::makeError<dtt::CudaError>(                                         \
                 "CUDA error at " + std::string(__FILE__) + ":" + std::to_string(__LINE__) \
                     + " - " + std::string(cudaGetErrorString(_err)),                      \
                 _err);                                                                    \

@@ -1,6 +1,6 @@
 #include "dtt/core/particles.h"
 
-namespace dtt:core
+namespace dtt::core
 {
     ParticlesBuffer ParticlesBuffer::make(std::size_t count, dtt::core::MemoryType type, std::size_t alignment) {
         ParticlesBuffer buffer;
@@ -35,5 +35,13 @@ namespace dtt:core
         v.mass = mass.data();
         v.count = count;
         return v;
+    }
+
+    bool ConstParticlesView::valid() const {
+        return x != nullptr && y != nullptr && vx != nullptr && vy != nullptr && mass != nullptr && count > 0;
+    }
+
+    bool ParticlesView::valid() const {
+        return x != nullptr && y != nullptr && vx != nullptr && vy != nullptr && mass != nullptr && count > 0;
     }
 }

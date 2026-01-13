@@ -2,6 +2,8 @@
 
 #include "dtt/core/memory.h"
 
+#include <cstddef>
+
 namespace dtt::core
 {
     struct ParticlesView;
@@ -42,13 +44,13 @@ namespace dtt::core
      * @brief A view structure for read-only access to particle data.
      */
     struct ConstParticlesView {
-        const double* x;
-        const double* y;
-        const double* vx;
-        const double* vy;
-        const double* mass;
+        const double* x{};
+        const double* y{};
+        const double* vx{};
+        const double* vy{};
+        const double* mass{};
     
-        std::size_t count;
+        std::size_t count{0};
         bool valid() const;
     };
     
@@ -56,13 +58,13 @@ namespace dtt::core
      * @brief A view structure for read-write access to particle data.
      */
     struct ParticlesView {
-        double* x;
-        double* y;
-        double* vx;
-        double* vy;
-        double* mass;
+        double* x{};
+        double* y{};
+        double* vx{};
+        double* vy{};
+        double* mass{};
     
-        std::size_t count;
+        std::size_t count{0};
         bool valid() const;
     };
 

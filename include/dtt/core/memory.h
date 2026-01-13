@@ -1,5 +1,13 @@
 #pragma once
 
+#include "dtt/util.h"
+
+#include <cstddef>
+#include <cstdlib>
+#include <stdexcept>
+#include <type_traits>
+#include <new>
+
 namespace dtt::core
 {
     /**
@@ -12,7 +20,7 @@ namespace dtt::core
     enum class MemoryType {
         HOST,
         DEVICE
-    }
+    };
 
     template <typename T>
     class Memory {
@@ -25,6 +33,15 @@ namespace dtt::core
         Memory& operator=(const Memory& other) = delete;
         ~Memory() { release(); }
 
+        /**
+        * @brief Allocates memory with specified memory type and alignment.
+        * @details For HOST memory, uses aligned_alloc for SIMD-friendly allocation.
+        *          For DEVICE memory, uses cudaMalloc (requires DTT_ENABLE_CUDA).
+        * @param count Number of elements to allocate.
+        * @param type Memory type (HOST or DEVICE).
+        * @param alignment Alignment in bytes (default is 64).
+        * @return A Memory object managing the allocated memory.
+        */
         static Memory allocate(std::size_t count, MemoryType type = MemoryType::HOST, std::size_t alignment = 64) {
             Memory mem;
             mem.size_ = count;
@@ -47,8 +64,44 @@ namespace dtt::core
 #endif
             return mem;
         }
-        void release();
 
+        /**
+         * @brief Extends the memory to a new size, preserving existing data.
+         * @param mem The Memory object to extend.
+         * @param new_size The new size in number of elements.
+         * @return Reference to the extended Memory object.
+         */
+        static Memory& extend(Memory& mem, std::size_t new_size) {
+            if (new_size <= mem.size_ || mem.type_ == MemoryType::DEVICE)
+                return mem;
+            Memory new_mem = allocate(new_size, mem.type_);
+            if (mem.valid()) {
+                std::memcpy(new_mem.data(), mem.data(), mem.size_ * sizeof(T));
+            }
+            mem.release();
+            mem = std::move(new_mem);
+            return mem;
+        }
+
+        /**
+         * @brief Releases the allocated memory.
+         */
+        void release() {
+            if (ptr_) {
+                if (type_ == MemoryType::HOST) {
+                    std::free(ptr_);
+                }
+#ifdef DTT_ENABLE_CUDA
+                else if (type_ == MemoryType::DEVICE) {
+                    DTT_CUDA_CHECK(cudaFree(ptr_));
+                }
+#endif
+                ptr_ = nullptr;
+                size_ = 0;
+            }
+        }
+
+        /// Accessors
         T* data() { return ptr_; }
         const T* data() const { return ptr_; }
         std::size_t size() const { return size_; }
