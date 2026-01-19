@@ -1,47 +1,51 @@
 #include "dtt/core/particles.h"
 
-namespace dtt::core
-{
-    ParticlesBuffer ParticlesBuffer::make(std::size_t count, dtt::core::MemoryType type, std::size_t alignment) {
-        ParticlesBuffer buffer;
-        buffer.count = count;
+namespace dtt::core {
 
-        buffer.x = dtt::core::Memory<double>::allocate(count, type, alignment);
-        buffer.y = dtt::core::Memory<double>::allocate(count, type, alignment);
-        buffer.vx = dtt::core::Memory<double>::allocate(count, type, alignment);
-        buffer.vy = dtt::core::Memory<double>::allocate(count, type, alignment);
-        buffer.mass = dtt::core::Memory<double>::allocate(count, type, alignment);
+ParticlesBuffer ParticlesBuffer::make(std::size_t count, dtt::core::MemoryType type,
+                                      std::size_t alignment) {
+    ParticlesBuffer buffer;
+    buffer.count = count;
 
-        return buffer;
-    }
+    buffer.x = dtt::core::Memory<double>::allocate(count, type, alignment);
+    buffer.y = dtt::core::Memory<double>::allocate(count, type, alignment);
+    buffer.vx = dtt::core::Memory<double>::allocate(count, type, alignment);
+    buffer.vy = dtt::core::Memory<double>::allocate(count, type, alignment);
+    buffer.mass = dtt::core::Memory<double>::allocate(count, type, alignment);
 
-    ParticlesView ParticlesBuffer::view() {
-        ParticlesView v;
-        v.x = x.data();
-        v.y = y.data();
-        v.vx = vx.data();
-        v.vy = vy.data();
-        v.mass = mass.data();
-        v.count = count;
-        return v;
-    }
-
-    ConstParticlesView ParticlesBuffer::const_view() const {
-        ConstParticlesView v;
-        v.x = x.data();
-        v.y = y.data();
-        v.vx = vx.data();
-        v.vy = vy.data();
-        v.mass = mass.data();
-        v.count = count;
-        return v;
-    }
-
-    bool ConstParticlesView::valid() const {
-        return x != nullptr && y != nullptr && vx != nullptr && vy != nullptr && mass != nullptr && count > 0;
-    }
-
-    bool ParticlesView::valid() const {
-        return x != nullptr && y != nullptr && vx != nullptr && vy != nullptr && mass != nullptr && count > 0;
-    }
+    return buffer;
 }
+
+ParticlesView ParticlesBuffer::view() {
+    ParticlesView v;
+    v.x = x.data();
+    v.y = y.data();
+    v.vx = vx.data();
+    v.vy = vy.data();
+    v.mass = mass.data();
+    v.count = count;
+    return v;
+}
+
+ConstParticlesView ParticlesBuffer::const_view() const {
+    ConstParticlesView v;
+    v.x = x.data();
+    v.y = y.data();
+    v.vx = vx.data();
+    v.vy = vy.data();
+    v.mass = mass.data();
+    v.count = count;
+    return v;
+}
+
+bool ConstParticlesView::valid() const {
+    return x != nullptr && y != nullptr && vx != nullptr && vy != nullptr && mass != nullptr &&
+           count > 0;
+}
+
+bool ParticlesView::valid() const {
+    return x != nullptr && y != nullptr && vx != nullptr && vy != nullptr && mass != nullptr &&
+           count > 0;
+}
+
+} // namespace dtt::core

@@ -1,4 +1,5 @@
 #include "dtt/tree/bounding_box.h"
+
 #include <algorithm>
 #include <cmath>
 #include <limits>

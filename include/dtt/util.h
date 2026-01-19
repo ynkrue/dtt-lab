@@ -10,12 +10,16 @@
 
 namespace dtt {
 
+void morton_encode(std::size_t *keys, const double *xs, const double *ys, std::size_t count,
+                   double min_x, double min_y, double max_x, double max_y);
+
+void radix_sort(std::size_t *keys, std::size_t *values, std::size_t count);
+
 /**
- * @file util.h
  * @brief Lightweight error helpers and CUDA check macro for DTT.
  */
 class Error : public std::exception {
-public:
+  public:
     explicit Error(std::string msg = "Unknown error") : message_(std::move(msg)) {}
     const char *what() const noexcept override { return message_.c_str(); }
     virtual ~Error() = default;
@@ -57,15 +61,15 @@ struct MemoryError : public Error {
 /**
  * @brief Evaluates `call` and throws a CudaError on failure.
  */
-#define DTT_CUDA_CHECK(call)                                                              \
-    do {                                                                                  \
-        cudaError_t _err = (call);                                                        \
-        if (_err != cudaSuccess) {                                                        \
-            throw dtt::makeError<dtt::CudaError>(                                         \
-                "CUDA error at " + std::string(__FILE__) + ":" + std::to_string(__LINE__) \
-                    + " - " + std::string(cudaGetErrorString(_err)),                      \
-                _err);                                                                    \
-        }                                                                                 \
+#define DTT_CUDA_CHECK(call)                                                                       \
+    do {                                                                                           \
+        cudaError_t _err = (call);                                                                 \
+        if (_err != cudaSuccess) {                                                                 \
+            throw dtt::makeError<dtt::CudaError>("CUDA error at " + std::string(__FILE__) + ":" +  \
+                                                     std::to_string(__LINE__) + " - " +            \
+                                                     std::string(cudaGetErrorString(_err)),        \
+                                                 _err);                                            \
+        }                                                                                          \
     } while (0)
 #else
 #define DTT_CUDA_CHECK(call) (call)

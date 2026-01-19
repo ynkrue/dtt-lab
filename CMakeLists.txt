@@ -12,29 +12,41 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     "Debug" "Release" "RelWithDebInfo" "MinSizeRel")
 endif()
 
-option(DTT_BUILD_TESTS "Build unit tests" ON)
-option(DTT_ENABLE_CUDA "Enable CUDA experiments (future work)" OFF)
 option(DTT_ENABLE_CLANG_TIDY "Run clang-tidy if available" OFF)
-option(DTT_BUILD_BENCHMARKS "Build benchmarks (Google Benchmark)" ON)
-option(DTT_BUILD_EXAMPLES "Build example executables" ON)
+option(DTT_BUILD_CUDA "Enable CUDA experiments (future work)" OFF)
+option(DTT_BUILD_BENCHMARKS "Build benchmarks (Google Benchmark)" OFF)
+option(DTT_BUILD_EXAMPLES "Build example executables" OFF)
+option(DTT_BUILD_TESTS "Build unit tests" ON)
 
-add_compile_options(-Wno-overriding-deployment-version)
-
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-if(DTT_ENABLE_CUDA)
+if(DTT_BUILD_CUDA)
   enable_language(CUDA)
+  add_compile_definitions(-DDTT_ENABLE_CUDA)
 endif()
 
 add_library(dtt STATIC
-  src/dtt.cpp
-  src/sim/particles.cpp
-  src/sim/forces.cpp
-  src/io/vtk.cpp
-  src/tree/bounding_box.cpp
-  src/tree/morton.cpp
-  src/tree/quadtree.cpp
+  src/core/particles.cpp
+  src/tree/bounding-box.cpp
+  src/tree/build.cpp
+  src/force/force-engine.cpp
+  src/force/cpu-tree.cpp
+  src/force/mpi-tree.cpp
+#  src/app/simulation-runner.cpp
+#  src/integrate/euler.cpp
+#  src/io/vtk-writer.cpp
+#  src/comm/comm-context.cpp
+#  src/comm/domain-decomposition.cpp
+#  src/comm/halo-exchange.cpp
 )
+
+if(DTT_ENABLE_CUDA)
+  enable_language(CUDA)
+  target_sources(dtt PRIVATE
+    cuda/cuda-build.cu
+    cuda/cuda-traversal.cu
+  )
+  target_include_directories(dtt PRIVATE ${PROJECT_SOURCE_DIR}/include) # already set
+  # Add any CUDA-specific compile options if needed
+endif()
 
 target_include_directories(dtt
   PUBLIC
@@ -64,6 +76,7 @@ if(CLANG_FORMAT_EXE)
     ${PROJECT_SOURCE_DIR}/src/*.cpp
     ${PROJECT_SOURCE_DIR}/tests/*.cc
     ${PROJECT_SOURCE_DIR}/tests/*.cpp
+    ${PROJECT_SOURCE_DIR}/cuda/*.cu
   )
   add_custom_target(format
     COMMAND ${CLANG_FORMAT_EXE} -i ${FORMAT_FILES}
@@ -85,10 +98,7 @@ if(DTT_BUILD_TESTS)
   FetchContent_MakeAvailable(googletest)
 
   add_executable(dtt-tests
-    tests/dummy_test.cpp
-    tests/particles_test.cpp
-    tests/forces_test.cpp
-    tests/quadtree_test.cpp
+    tests/build_quadtree_test.cpp
   )
   target_link_libraries(dtt-tests PRIVATE dtt GTest::gtest_main)
 
@@ -103,40 +113,24 @@ if(DTT_BUILD_TESTS)
 endif()
 
 if(DTT_BUILD_BENCHMARKS)
-  include(FetchContent)
-  set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
-  FetchContent_Declare(
-    googlebenchmark
-    URL https://github.com/google/benchmark/archive/refs/tags/v1.8.3.zip
-  )
-  FetchContent_MakeAvailable(googlebenchmark)
-
-  add_executable(dtt-bench
-    benchmarks/naive_bench.cpp
-    benchmarks/tree_bench.cpp
-    benchmarks/function_bench.cpp
-  )
-  target_link_libraries(dtt-bench PRIVATE dtt benchmark::benchmark benchmark::benchmark_main)
-  if(MSVC)
-    target_compile_options(dtt-bench PRIVATE /W4 /permissive-)
-  else()
-    target_compile_options(dtt-bench PRIVATE -Wall -Wextra -Wpedantic -Werror)
-  endif()
+#  include(FetchContent)
+#  set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
+#  FetchContent_Declare(
+#    googlebenchmark
+#    URL https://github.com/google/benchmark/archive/refs/tags/v1.8.3.zip
+#  )
+#  FetchContent_MakeAvailable(googlebenchmark)
+#
+#  add_executable(dtt-bench
+#  )
+#  target_link_libraries(dtt-bench PRIVATE dtt benchmark::benchmark benchmark::benchmark_main)
+#  if(MSVC)
+#    target_compile_options(dtt-bench PRIVATE /W4 /permissive-)
+#  else()
+#    target_compile_options(dtt-bench PRIVATE -Wall -Wextra -Wpedantic -Werror)
+#  endif()
 endif()
 
 if(DTT_BUILD_EXAMPLES)
-  add_executable(dtt-sim_naive examples/sim_main_naive.cpp)
-  add_executable(dtt-sim_tree examples/sim_main_tree.cpp)
-  target_link_libraries(dtt-sim_naive PRIVATE dtt)
-  if(MSVC)
-    target_compile_options(dtt-sim_naive PRIVATE /W4 /permissive-)
-  else()
-    target_compile_options(dtt-sim_naive PRIVATE -Wall -Wextra -Wpedantic -Werror)
-  endif()
-  target_link_libraries(dtt-sim_tree PRIVATE dtt)
-  if(MSVC)
-    target_compile_options(dtt-sim_tree PRIVATE /W4 /permissive-)
-  else()
-    target_compile_options(dtt-sim_tree PRIVATE -Wall -Wextra -Wpedantic -Werror)
-  endif()
+#  add_executable(dtt-sim examples/sim_main.cpp)
 endif()
