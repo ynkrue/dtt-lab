@@ -14,7 +14,7 @@ endif()
 
 option(DTT_ENABLE_CLANG_TIDY "Run clang-tidy if available" OFF)
 option(DTT_BUILD_CUDA "Enable CUDA experiments (future work)" OFF)
-option(DTT_BUILD_BENCHMARKS "Build benchmarks (Google Benchmark)" OFF)
+option(DTT_BUILD_BENCHMARKS "Build benchmarks (Google Benchmark)" ON)
 option(DTT_BUILD_EXAMPLES "Build example executables" OFF)
 option(DTT_BUILD_TESTS "Build unit tests" ON)
 
@@ -24,6 +24,7 @@ if(DTT_BUILD_CUDA)
 endif()
 
 add_library(dtt STATIC
+  src/util.cpp
   src/core/particles.cpp
   src/tree/bounding-box.cpp
   src/tree/build.cpp
@@ -57,7 +58,7 @@ target_include_directories(dtt
 if(MSVC)
   target_compile_options(dtt PRIVATE /W4 /permissive- /w44242 /w44061 /w44062 /wd4464)
 else()
-  target_compile_options(dtt PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  target_compile_options(dtt PRIVATE -Wall -Wextra -Wpedantic -Werror -Wno-unknown-pragmas)
 endif()
 
 if(DTT_ENABLE_CLANG_TIDY)
@@ -113,22 +114,23 @@ if(DTT_BUILD_TESTS)
 endif()
 
 if(DTT_BUILD_BENCHMARKS)
-#  include(FetchContent)
-#  set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
-#  FetchContent_Declare(
-#    googlebenchmark
-#    URL https://github.com/google/benchmark/archive/refs/tags/v1.8.3.zip
-#  )
-#  FetchContent_MakeAvailable(googlebenchmark)
-#
-#  add_executable(dtt-bench
-#  )
-#  target_link_libraries(dtt-bench PRIVATE dtt benchmark::benchmark benchmark::benchmark_main)
-#  if(MSVC)
-#    target_compile_options(dtt-bench PRIVATE /W4 /permissive-)
-#  else()
-#    target_compile_options(dtt-bench PRIVATE -Wall -Wextra -Wpedantic -Werror)
-#  endif()
+  include(FetchContent)
+  set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
+  FetchContent_Declare(
+    googlebenchmark
+    URL https://github.com/google/benchmark/archive/refs/tags/v1.8.3.zip
+  )
+  FetchContent_MakeAvailable(googlebenchmark)
+
+  add_executable(dtt-bench
+    benchmarks/build_quadtree_bench.cpp
+  )
+  target_link_libraries(dtt-bench PRIVATE dtt benchmark::benchmark benchmark::benchmark_main)
+  if(MSVC)
+    target_compile_options(dtt-bench PRIVATE /W4 /permissive-)
+  else()
+    target_compile_options(dtt-bench PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  endif()
 endif()
 
 if(DTT_BUILD_EXAMPLES)

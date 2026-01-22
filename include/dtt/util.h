@@ -10,10 +10,24 @@
 
 namespace dtt {
 
-void morton_encode(std::size_t *keys, const double *xs, const double *ys, std::size_t count,
-                   double min_x, double min_y, double max_x, double max_y);
+namespace util {
 
-void radix_sort(std::size_t *keys, std::size_t *values, std::size_t count);
+std::tuple<double, double, double, double> minmax_box(const double *xs, const double *ys, std::size_t count);
+
+inline uint64_t morton_encode_2d(uint32_t x, uint32_t y) {
+    uint64_t answer = 0;
+    for (uint64_t i = 0; i < (sizeof(uint32_t) * 8); ++i) {
+        answer |= ((x & (1ULL << i)) << i) | ((y & (1ULL << i)) << (i + 1));
+    }
+    return answer;
+}
+
+void morton_encode(uint64_t *keys, std::size_t *values, const double *xs, const double *ys,
+                   std::size_t count, double min_x, double min_y, double max_x, double max_y);
+
+void radix_sort(uint64_t *keys, std::size_t *values, std::size_t count);
+
+} // namespace util
 
 /**
  * @brief Lightweight error helpers and CUDA check macro for DTT.

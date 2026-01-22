@@ -23,8 +23,27 @@ template <typename T> class Memory {
   public:
     // RAII ownership: default ctors, disable copy, allow move
     Memory() = default;
-    Memory(Memory &&other) noexcept = default;
-    Memory &operator=(Memory &&other) noexcept = default;
+    Memory(Memory &&other) noexcept {
+        ptr_ = other.ptr_;
+        size_ = other.size_;
+        type_ = other.type_;
+        alignment_ = other.alignment_;
+        other.ptr_ = nullptr;
+        other.size_ = 0;
+    }
+
+    Memory &operator=(Memory &&other) noexcept {
+        if (this != &other) {
+            release();
+            ptr_ = other.ptr_;
+            size_ = other.size_;
+            type_ = other.type_;
+            alignment_ = other.alignment_;
+            other.ptr_ = nullptr;
+            other.size_ = 0;
+        }
+        return *this;
+    }
     Memory(const Memory &other) = delete;
     Memory &operator=(const Memory &other) = delete;
     ~Memory() { release(); }
@@ -48,14 +67,24 @@ template <typename T> class Memory {
             return mem;
         }
         if (type == MemoryType::HOST) {
-#pragma GCC diagnostic push // buf in GCC 10+ complains about maybe uninitialized ptr_
-#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-            // aligned memory allocation (simd friendly)
-            std::size_t bytes = ((count * sizeof(T) + alignment - 1) / alignment) * alignment;            mem.ptr_ = static_cast<T *>(std::aligned_alloc(alignment, bytes));
-            if (!mem.ptr_)
-                throw makeError<MemoryError>("aligned malloc failed");
-#pragma GCC diagnostic pop
+            if (alignment < alignof(T))
+                alignment = alignof(T);
+            // make alignment a power of two
+            if ((alignment & (alignment - 1)) != 0) {
+                // round up to next power of two
+                std::size_t a = 1;
+                while (a < alignment)
+                    a <<= 1;
+                alignment = a;
+            }
+            mem.alignment_ = alignment;
+            void *p = nullptr;
+            int rc = posix_memalign(&p, alignment, count * sizeof(T));
+            if (rc != 0 || !p)
+                throw makeError<MemoryError>("posix_memalign failed");
+            mem.ptr_ = static_cast<T *>(p);
         }
+
 #ifdef DTT_ENABLE_CUDA
         else if (type == MemoryType::DEVICE) {
             // device memory allocation
@@ -84,6 +113,7 @@ template <typename T> class Memory {
         type_ = new_mem.type_;
         new_mem.ptr_ = nullptr;
         new_mem.size_ = 0;
+        new_mem.alignment_ = 0;
     }
 
     /**
@@ -117,5 +147,6 @@ template <typename T> class Memory {
     T *ptr_{nullptr};
     std::size_t size_{0};
     MemoryType type_{MemoryType::HOST};
+    std::size_t alignment_{alignof(T)};
 };
 } // namespace dtt::core

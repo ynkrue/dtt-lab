@@ -12,7 +12,12 @@ using dtt::tree::BuildParams;
 using dtt::tree::Tree;
 using BuildFn = Tree (*)(const ConstParticlesView &, const BuildParams &);
 
-class BuildTreeTest : public ::testing::TestWithParam<BuildFn> {};
+struct BuilderCase {
+    const char *name;
+    BuildFn fn;
+};
+
+class BuildTreeTest : public ::testing::TestWithParam<BuilderCase> {};
 
 namespace {
 
@@ -32,7 +37,7 @@ ParticlesBuffer make_particles(const std::vector<double> &xs, const std::vector<
 
 TEST_P(BuildTreeTest, HandlesEmptyInput) {
     ParticlesBuffer buf = ParticlesBuffer::make(0);
-    Tree t = GetParam()(buf.const_view(), BuildParams{});
+    Tree t = GetParam().fn(buf.const_view(), BuildParams{});
     EXPECT_EQ(t.index_count, 0u);
     EXPECT_EQ(t.node_count, 0u);
     EXPECT_EQ(t.root, -1);
@@ -43,7 +48,7 @@ TEST_P(BuildTreeTest, ComputesRootBoundingBox) {
         make_particles({0.0, 1.0, 0.0, 1.0}, {0.0, 0.0, 1.0, 1.0}, {1.0, 1.0, 1.0, 1.0});
     BuildParams params;
     params.padding = 0.0;
-    Tree t = GetParam()(buf.const_view(), params);
+    Tree t = GetParam().fn(buf.const_view(), params);
     ASSERT_NE(t.root, -1);
     EXPECT_DOUBLE_EQ(t.root_box.min_x, 0.0);
     EXPECT_DOUBLE_EQ(t.root_box.min_y, 0.0);
@@ -59,7 +64,7 @@ TEST_P(BuildTreeTest, SplitsIntoLeavesRespectingMaxLeafSize) {
     params.max_depth = 8;
     params.padding = 0.0;
 
-    Tree t = GetParam()(buf.const_view(), params);
+    Tree t = GetParam().fn(buf.const_view(), params);
     ASSERT_NE(t.root, -1);
     const auto &root = t.nodes[t.root];
     // All 4 children should exist and each contain exactly one particle.
@@ -81,7 +86,7 @@ TEST_P(BuildTreeTest, RespectsMaxDepth) {
     params.max_depth = 0; // disallow any split
     params.padding = 0.0;
 
-    Tree t = GetParam()(buf.const_view(), params);
+    Tree t = GetParam().fn(buf.const_view(), params);
     ASSERT_NE(t.root, -1);
     const auto &root = t.nodes[t.root];
     EXPECT_EQ(root.children[0], -1);
@@ -97,7 +102,7 @@ TEST_P(BuildTreeTest, ComputesMassAndCenterOfMass) {
     params.max_leaf_size = 1;
     params.padding = 0.0;
 
-    Tree t = GetParam()(buf.const_view(), params);
+    Tree t = GetParam().fn(buf.const_view(), params);
     ASSERT_NE(t.root, -1);
     const auto &root = t.nodes[t.root];
     // Root mass and COM should reflect both particles.
@@ -106,10 +111,16 @@ TEST_P(BuildTreeTest, ComputesMassAndCenterOfMass) {
     EXPECT_DOUBLE_EQ(root.com_y, 0.0);
 }
 
-INSTANTIATE_TEST_SUITE_P(
-    Builders, BuildTreeTest,
-    ::testing::Values(&dtt::tree::build_quadtree_base
-                      // Add more builders (e.g., &dtt::tree::build_quadtree_omp) once implemented
-                      ));
+std::string BuilderName(const ::testing::TestParamInfo<BuilderCase> &info) {
+    return info.param.name;
+}
+
+INSTANTIATE_TEST_SUITE_P(Builders, BuildTreeTest,
+                         ::testing::Values(BuilderCase{"base", &dtt::tree::build_quadtree_base},
+                                           BuilderCase{"morton", &dtt::tree::build_quadtree}
+                                           // Add more builders (e.g., {"omp",
+                                           // &dtt::tree::build_quadtree_omp}) once implemented
+                                           ),
+                         BuilderName);
 
 } // namespace
