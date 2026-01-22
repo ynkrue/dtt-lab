@@ -31,6 +31,8 @@ dtt::tree::Tree build_quadtree(const dtt::core::ConstParticlesView &particles,
     // init particles indices
     tree.index_count = particles.count;
     tree.indices = dtt::core::Memory<std::size_t>::allocate(particles.count);
+
+    #pragma omp parallel for if (particles.count >= 1000)
     for (std::size_t i = 0; i < particles.count; ++i)
         tree.indices[i] = i;
 
@@ -48,7 +50,7 @@ dtt::tree::Tree build_quadtree(const dtt::core::ConstParticlesView &particles,
 
     // build tree using stack
     std::vector<std::size_t> stack;
-    stack.reserve(128);
+    stack.reserve(capacity);
     stack.push_back(tree.root);
 
     while (!stack.empty()) {
@@ -90,6 +92,7 @@ dtt::tree::Tree build_quadtree(const dtt::core::ConstParticlesView &particles,
         std::array<double, 12> child_coms{0}; // com_x, com_y, mass
 
         std::vector<std::size_t> quadrants[4];
+        #pragma omp parallel for if (node.count >= 1000)
         for (std::size_t i = 0; i < node.count; ++i) {
             std::size_t p_idx = tree.indices[node.first + i];
             int quad = (particles.x[p_idx] >= mid_x) | ((particles.y[p_idx] >= mid_y) << 1);
@@ -102,7 +105,8 @@ dtt::tree::Tree build_quadtree(const dtt::core::ConstParticlesView &particles,
         // create child nodes
         std::size_t child_offset = 0;
         double parent_mass = 0.0, parent_com_x = 0.0, parent_com_y = 0.0;
-#pragma unroll
+
+        #pragma unroll
         for (int q = 0; q < 4; ++q) {
             // check for empty quadrant and max capacity
             if (quadrants[q].empty()) {
