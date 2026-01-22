@@ -27,7 +27,7 @@ ParticlesBuffer make_random_particles(std::size_t n, unsigned seed = 1234) {
 
 } // namespace
 
-static void BM_BuildQuadtreeMorton(benchmark::State &state) {
+static void BM_BuildQuadtree(benchmark::State &state) {
     const std::size_t n = static_cast<std::size_t>(state.range(0));
     ParticlesBuffer buf = make_random_particles(n);
     BuildParams params;
@@ -37,6 +37,6 @@ static void BM_BuildQuadtreeMorton(benchmark::State &state) {
     }
     state.SetItemsProcessed(state.iterations() * static_cast<long>(n));
 }
-BENCHMARK(BM_BuildQuadtreeMorton)->RangeMultiplier(4)->Range(1 << 11, 1 << 23);
+BENCHMARK(BM_BuildQuadtree)->RangeMultiplier(4)->Range(1 << 11, 1 << 23);
 
 BENCHMARK_MAIN();
