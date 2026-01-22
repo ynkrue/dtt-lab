@@ -27,18 +27,6 @@ ParticlesBuffer make_random_particles(std::size_t n, unsigned seed = 1234) {
 
 } // namespace
 
-static void BM_BuildQuadtreeBase(benchmark::State &state) {
-    const std::size_t n = static_cast<std::size_t>(state.range(0));
-    ParticlesBuffer buf = make_random_particles(n);
-    BuildParams params;
-    for (auto _ : state) {
-        Tree t = dtt::tree::build_quadtree_base(buf.const_view(), params);
-        benchmark::DoNotOptimize(t);
-    }
-    state.SetItemsProcessed(state.iterations() * static_cast<long>(n));
-}
-BENCHMARK(BM_BuildQuadtreeBase)->RangeMultiplier(4)->Range(1 << 11, 1 << 23);
-
 static void BM_BuildQuadtreeMorton(benchmark::State &state) {
     const std::size_t n = static_cast<std::size_t>(state.range(0));
     ParticlesBuffer buf = make_random_particles(n);

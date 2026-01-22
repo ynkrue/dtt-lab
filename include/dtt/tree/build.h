@@ -22,16 +22,11 @@ struct BuildParams {
     double padding = 1e-6;
 };
 
-/// @brief Simple basline implmenetation without morton-code ordering
-dtt::tree::Tree build_quadtree_base(const dtt::core::ConstParticlesView &particles,
-                                    const BuildParams &params);
-
 /// @brief Quadtree build with mortoncode ordering and optional OpenMP parallelization and SIMD
 /// vectorization
 dtt::tree::Tree build_quadtree(const dtt::core::ConstParticlesView &particles,
                                const BuildParams &params);
 
-/// @brief OpenMP parallelized quadtree builder using producer-consumer pattern
 dtt::tree::Tree build_quadtree_omp(const dtt::core::ConstParticlesView &particles,
                                    const BuildParams &params);
 

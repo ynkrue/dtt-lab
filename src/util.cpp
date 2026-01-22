@@ -3,19 +3,20 @@
 
 #include <cstddef>
 #include <cstring>
-#include <vector>
-#include <tuple>
 #include <limits>
+#include <tuple>
+#include <vector>
 
 namespace dtt::util {
 
-std::tuple<double, double, double, double> minmax_box(const double *xs, const double *ys, std::size_t count) {
+std::tuple<double, double, double, double> minmax_box(const double *xs, const double *ys,
+                                                      std::size_t count) {
     double min_x = std::numeric_limits<double>::infinity();
     double min_y = std::numeric_limits<double>::infinity();
     double max_x = -std::numeric_limits<double>::infinity();
     double max_y = -std::numeric_limits<double>::infinity();
 
-    #pragma omp parallel for reduction(min : min_x, min_y) reduction(max : max_x, max_y)
+#pragma omp parallel for reduction(min : min_x, min_y) reduction(max : max_x, max_y)
     for (std::size_t i = 0; i < count; ++i) {
         min_x = std::min(min_x, xs[i]);
         max_x = std::max(max_x, xs[i]);
@@ -30,7 +31,7 @@ void morton_encode(uint64_t *keys, std::size_t *values, const double *xs, const 
     const double scale_x = 1.0 / (max_x - min_x);
     const double scale_y = 1.0 / (max_y - min_y);
 
-    #pragma omp parallel for if (count >= 1000)
+#pragma omp parallel for if (count >= 1000)
     for (std::size_t i = 0; i < count; ++i) {
         double nx = (xs[i] - min_x) * scale_x;
         double ny = (ys[i] - min_y) * scale_y;
@@ -60,8 +61,8 @@ void radix_sort(uint64_t *keys, std::size_t *values, std::size_t count) {
         std::vector<int> bucket_count(bucket_size, 0);
         int shift = pass * bits_per_pass;
 
-        // counting occurrences
-        #pragma omp parallel for if (count >= 1000)
+// counting occurrences
+#pragma omp parallel for if (count >= 1000)
         for (std::size_t i = 0; i < count; ++i) {
             uint64_t key = (keys[i] >> shift) & (bucket_size - 1);
             bucket_count[key]++;
@@ -72,8 +73,8 @@ void radix_sort(uint64_t *keys, std::size_t *values, std::size_t count) {
             bucket_count[i] += bucket_count[i - 1];
         }
 
-        // build output array
-        #pragma omp parallel for if (count >= 1000)
+// build output array
+#pragma omp parallel for if (count >= 1000)
         for (std::size_t i = count; i-- > 0;) {
             uint64_t key = (keys_cur[i] >> shift) & (bucket_size - 1);
             const int pos = --bucket_count[key];

@@ -12,7 +12,8 @@ namespace dtt {
 
 namespace util {
 
-std::tuple<double, double, double, double> minmax_box(const double *xs, const double *ys, std::size_t count);
+std::tuple<double, double, double, double> minmax_box(const double *xs, const double *ys,
+                                                      std::size_t count);
 
 inline uint64_t morton_encode_2d(uint32_t x, uint32_t y) {
     uint64_t answer = 0;

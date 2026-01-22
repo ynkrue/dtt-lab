@@ -116,8 +116,7 @@ std::string BuilderName(const ::testing::TestParamInfo<BuilderCase> &info) {
 }
 
 INSTANTIATE_TEST_SUITE_P(Builders, BuildTreeTest,
-                         ::testing::Values(BuilderCase{"base", &dtt::tree::build_quadtree_base},
-                                           BuilderCase{"morton", &dtt::tree::build_quadtree}
+                         ::testing::Values(BuilderCase{"morton", &dtt::tree::build_quadtree}
                                            // Add more builders (e.g., {"omp",
                                            // &dtt::tree::build_quadtree_omp}) once implemented
                                            ),
